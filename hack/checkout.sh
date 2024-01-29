@@ -26,8 +26,12 @@ checkout_wing() {
     cd wing && git fetch
     result=$(git branch -l -r "*/$branch")
     if [[ "$result" == "" ]]; then
-        echo "No such branch: $branch"
-        exit 1
+        # if parameter is not a branch, try commit id
+        result=$(git rev-parse --verify "$branch")
+        if [[ "$result" == "" ]]; then
+            echo "No such branch or commit id: $branch"
+            exit 1
+        fi
     fi
     git checkout "$branch"
     git pull
@@ -40,10 +44,13 @@ checkout_core() {
     ask_continue
     repo_rinse
     cd wing/dae-core && git fetch
-    result=$(git branch -l -r "*/$branch")
+    result=$(git tag -l "$branch")
     if [[ "$result" == "" ]]; then
-        echo "No such branch: $branch"
-        exit 1
+        result=$(git branch -l -r "*/$branch")
+        if [[ "$result" == "" ]]; then
+            echo "No such branch or tag: $branch"
+            exit 1
+        fi
     fi
     git checkout "$branch"
     git pull
